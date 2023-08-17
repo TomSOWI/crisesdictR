@@ -1,0 +1,76 @@
+---
+title: "Untitled"
+author: "Tom Klotz"
+date: "17 8 2023"
+output: html_document
+---
+
+```{r}
+
+```
+
+
+### Corona
+
+```{r}
+corona <- c("Impfgegner", "Covid-19", "SARS-CoV-2", "Pandemie", "China", "Impfpflicht", "AstraZeneca", "Testzentrum", "Verschwörung(stheorien)", "Corona-Leugner", "Corona-Klage", "Meinungsfreiheit", "Maskenpflicht")
+```
+
+### Klima
+
+```{r}
+klima <- c("letzte Generation", "Klimakleber", "Frust", "Energiekrise", "Fridays-For-Future/ FFF", "Extinction Rebellion", "1,5 Grad Ziel", "Überwärmung/ Überhitztung", "Gletscher schmelzen", "Klimakatastrophe", "Pariser(-)Konvention")
+```
+
+
+```{r}
+dfKWIC <- kwic(speeches2001, klima)
+```
+
+
+### Ukrainekrieg
+
+```{r}
+rukrieg <- c("Putin", 
+             "Tod", 
+             "Kalter-Krieg", 
+             "Informationskrieg", 
+             "Anti-Russland", 
+             "U.S. Aggression", 
+             "Entnazifizierung", 
+             "NATO", "Flüchtlinge", 
+             "Selenskyi", 
+             "Volksrepublik Lugansk (LPR /LNR)", 
+             "Donetsk (DPR /DNR)", "Kyiv", 
+             "Donbass etc.", "Genozid", 
+             "Sanktion", 
+             "Meinungs- u. Medienfreiheit", 
+             "Machtkampf", 
+             "Wagner-Söldner")
+```
+
+### Flüchtlinge
+
+```{r}
+flüchtlinge <- c("(Binnen)", "Flüchtling*", "Geflüchtet*", "globaler Flüchtlingspakt", "Syrien", "Migranten*", "Genfer Flüchtlingskonvention", "Flüchtlingslager", "Asylbewerber*", "Asyl", "Aufenthaltserlaubnis", "Einwanderung*", "Aufenthaltstitel", "Illegal", "Herkunftsstaat*", "Dublin-Verordnung")
+```
+
+### Finanzkrise
+
+```{r}
+
+```
+
+### Arbeitslosigkeit
+
+```{r}
+arbeitslosigkeit <- c("Bürgergeld", "Strukturelle Unterschiede Ost-Westdeutschland", "Arbeitslosengeldes II", "Hartz-IV-Reform", "Lohnlücke", "Arbeitsvermittlung", "Massenarbeitslosigkeit", "Wirtschaftliche u. politisch-gesellschaftliche Folgen", "Finanzielle u. psychologische Belastungen", "Sozialformen", "Armut", "Arbeitslosenquote", "Arbeitsmarkt", "Mindestlohn", "Wirtschaft", "Kapitalismus", "Spaltung Arm u. Reich", "Die Linke", "Kosten/Löhne/Preise", "Inflation", "ungeheurliche Preise", "Preissteigerung", "unbezahlbar", "Kapitalismus", "Spritpreise")
+```
+
+### Inflation/kosten/Preise
+
+```{r}
+presie <- c("Inflation", "ungeheurliche Preise", "Preissteigerung", "unbezahlbar", "Kapitalismus", "Spritpreise")
+
+```
+

@@ -1,0 +1,61 @@
+---
+title: "SQL_Datenabfragen"
+author: "Tom Klotz"
+date: "13 4 2023"
+output: html_document
+---
+
+
+
+```{r}
+library(RPostgres)
+library(RPostgreSQL)
+
+
+# db_connection -----------------------------------------------------------
+db <- "next"
+host_db <- "localhost"
+db_port <- "5432"
+db_user <- "postgres"
+db_password <- "postgres"
+con <-
+  RPostgreSQL::dbConnect(
+    RPostgres::Postgres(),
+    dbname = db,
+    host = host_db,
+    port = db_port,
+    user = db_user,
+    password = db_password
+  )
+
+# get data tables ---------------------------------------------------------
+
+
+
+speeches2001 <- dbGetQuery(con,
+                       "SELECT s.id,s.speech_content,s.date,f.abbreviation AS party
+                        FROM open_discourse.speeches AS s
+                        INNER JOIN open_discourse.factions AS f ON
+                        s.faction_id = f.id
+                        WHERE date >='2001-01-01' 
+                        AND NOT abbreviation = 'not found';")
+
+
+saveRDS(speeches2001, file = "speeches/speeches2001.RDS")
+        
+
+speeches2013 <- dbGetQuery(con,
+                       "SELECT s.id,s.speech_content,s.date,f.abbreviation AS party
+                        FROM open_discourse.speeches AS s
+                        INNER JOIN open_discourse.factions AS f ON
+                        s.faction_id = f.id
+                        WHERE date >='2013-01-01' 
+                        AND NOT abbreviation = 'not found';")
+
+
+saveRDS(speeches2013, file = "speeches/speeches2013.RDS")
+        
+
+
+```
+
