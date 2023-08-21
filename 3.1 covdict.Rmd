@@ -1,0 +1,55 @@
+---
+title: "3. 1 Corona"
+output: html_document
+date: "2023-08-21"
+---
+### Corona
+
+```{r}
+corona <- c("Impfgegner", "Covid-19", "SARS-CoV-2", "Pandemie", "China-Virus", "Impfpflicht", "AstraZeneca", "Testzentrum", "Verschwörung(stheorien)", "Corona-Leugner", "Corona-Klage", "Maskenpflicht","Impfung")
+
+
+
+aussortiert <- c("Meinungsfreiheit","impf*")
+
+
+covdict <- c("pandemie", "corona*", "covid-19","china-virus","corona-leugner","impfgegner","sars-cov-2", "lockdown","omikron","mrna","testzentr*")
+
+            
+unternehmen <-c("astrazeneca","biontech","pfizer", "johnson & johnson","moderna") #sinnvoll
+```
+
+
+```{r}
+dfKwic <- as.data.frame(kwic(tokens_tolower(tokens(raw_corpus)),
+           pattern = covdict, separator = " "))
+
+
+dates <- data.frame(docname = docnames(raw_corpus), date = docvars(raw_corpus)$date)
+dates$year <- as.numeric(substring(dates$date, 1,4))
+
+dfMerged <- merge(dfKwic,dates)
+
+dfunter2019 <- dfMerged[dfMerged$year < 2019,]
+df2019 <- dfMerged[dfMerged$year >= 2019,]
+
+table(dfunter2019$pattern)
+table(df2019$pattern)
+
+
+```
+
+```{r}
+covdict <- list(covdict)
+covdict <- dictionary(covdict)
+
+dict
+
+dfm <- dfm(raw_corpus)
+
+
+dfm <- dfm%>%
+  dfm_tolower()%>%
+  dfm_lookup(covdict)
+```
+

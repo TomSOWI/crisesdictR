@@ -10,6 +10,42 @@ df <- read_delim("politbarometer_zeitreihe.csv",
     delim = ";", escape_double = FALSE, trim_ws = TRUE)
 ```
 
+### größte Krisen nach Politbarometer
+```{r}
+df$year <- as.numeric(substring(df$...2, 7,11))
+#df2001 <- df[df$year >= 2001,]
+
+df$...1 <- NULL
+df$...2 <- NULL
+
+dfSum <- aggregate(df, by = list(df$year), FUN = sum)
+
+df$year <- 9999
+dfMean <- aggregate(df, by = list(df$year), FUN = mean, na.action = na.omit)
+
+
+#?aggregate
+```
+
+```{r}
+dfSum$year <- dfSum$Group.1
+dfSum$Group.1 <- NULL
+
+dfMelt <- melt(dfSum, id.vars = "year")
+
+ggplot(dfMelt, aes(x = year, y = value, group = variable, color = variable))+
+         geom_line()+
+         theme_bw()
+        
+
+#Klima, Corona,
+#Flüchtlinge
+#Arbeitslosigkeit? - bis 2013
+#Ukrainekrieg
+```
+
+
+
 ### Seit 2013 in Jahren
 Ukrainekrieg [2022]
 Corona[2020]
