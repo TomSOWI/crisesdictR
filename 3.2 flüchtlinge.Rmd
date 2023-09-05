@@ -7,71 +7,121 @@ date: "2023-08-21"
 ### Corona
 
 ```{r}
-flüchtlinge <- c("(Binnen)", "Flüchtling*", "Geflüchtet*", "globaler Flüchtlingspakt", "Syrien", "Migranten*", "Genfer Flüchtlingskonvention", "Flüchtlingslager", "Asylbewerber*", "Asyl", "Aufenthaltserlaubnis", "Einwanderung*", "Aufenthaltstitel", "Illegal", "Herkunftsstaat*", "Dublin-Verordnung")
+flüchtlinge <- c("(Binnen)", "Flüchtling*", "Geflüchtet*", "globaler Flüchtlingspakt", "Syrien", "Migranten*", "Genfer Flüchtlingskonvention", "Flüchtlingslager", "Asylbewerber*", "Asyl", "Aufenthaltserlaubnis", "Einwanderung*", "Aufenthaltstitel", "Illegal", "Herkunftsstaat*", "Dublin-Verordnung","Dublin-Abkommen")
 
-refugeedict <- c("*flüchtling*", "einwanderung","*migra*","asyl","*integration*")
+#"*integration*"
+refugees <- c("*flüchtling*", "*einwanderung","*migra*","asyl")
 
-#2015 darf sich nicht wiederholen
-#krise
-#syrien
-#
+#"Herkunftsstaat","Herkunftsland", "Aufenthaltserlaubnis","Dublin-Verodnung","Dublin-Abkommen"
 ```
 
 
 ```{r}
 dfKwic <- as.data.frame(kwic(tokens_tolower(tokens(raw_corpus)),
-           pattern = refugeedict, separator = " "))
+           pattern = refugees, separator = " "))
 
 
 dates <- data.frame(docname = docnames(raw_corpus), date = docvars(raw_corpus)$date)
 dates$year <- as.numeric(substring(dates$date, 1,4))
 
+dfMerged <- merge(dfKwic,dates)
 
+dfMerged1 <- dfMerged[dfMerged$year <= 2010,]
 
-table(dfKwic$pattern)
+table(dfMerged$pattern)
 
 
 
 ```
 
 ```{r}
-refugeedict<- list(refugees = refugeedict)
-refugeedict <- dictionary(refugeedict)
-
+refugeedict<- dictionary(list(refugees = refugees))
 
 dfm <- dfm(raw_corpus)
+
 results <- dfm%>%
   dfm_tolower()%>%
   dfm_lookup(refugeedict)
 
+dfRefugee <- convert(results, to = "data.frame")
 
-df <- convert(results, to = "data.frame")
+dfRefugee$quarter <- floor_date(docvars(dfm)$date, "quarter")
 
-
-df$year <- as.numeric(substring(docvars(dfm)$date, 1,4))
-df$month <- paste0(substring(docvars(dfm)$date, 6,7),"-", substring(docvars(dfm)$date, 1,4), sep = "")
-
-results_year <- df %>%
-  select(year, refugees)%>%
-  group_by(year)%>%
+results_quarter <- dfRefugee %>%
+  select(quarter, refugees)%>%
+  group_by(quarter)%>%
   reframe(
-    corona = sum(refugees)
-  )
-
-results_month <- df %>%
-  select(month, refugees)%>%
-  group_by(month)%>%
-  reframe(
-    corona = sum(refugees)
+    refugees = sum(refugees)
   )
 
 ```
 
 
-### Korrelation
+## Validierung
+
+### Konstruktvalidität
 
 ```{r}
-#cor(results_year$corona, dfSum$Coronavirus)
+dfVal <- merge(results_quarter, dfGroup1)
 
+cor(dfVal$refugees, dfCor$Flüchtlinge)
+```
+### Split-half reliabilität
+
+```{r}
+pattern <- refugees
+reliability <- list()
+
+for (i in c(0:1000)){
+  
+  half_1 <- sample(
+  x = pattern,
+  size = round(length(pattern)/2, 0),
+  replace = FALSE
+  )
+  half_2 <- pattern[!(pattern %in% half_1)]
+  
+  results1 <- dfm%>%
+  dfm_tolower()%>%
+  dfm_lookup(half1)
+  
+  results1 <- convert(results1, to = "data.frame")
+  
+  results2 <- dfm%>%
+  dfm_tolower()%>%
+  dfm_lookup(half2)
+  
+  results2 <- convert(results2, to = "data.frame")
+
+  relia <- spearman_brown(results1,  results2)
+  reliability[i] <- relia
+}
+  
+saveRDS(reliability, file = "refugeeRelia.RDS") 
 ```
 
+### Wordclouds
+
+```{r}
+textplot <- function(text, min_freq = 25){
+  text <- gsub("dass","",text)
+  dtm <- dfm(text) %>%
+    dfm(remove = stopwords('german')) %>%
+    dfm_wordstem() %>%
+    dfm_trim(min_termfreq = min_freq , verbose = FALSE)
+  
+  set.seed(100)
+  textplot_wordcloud(dtm)
+  
+}
+```
+
+```{r}
+dfKwic <- as.data.frame(kwic(toks,
+           pattern = refugees, separator = " "))
+
+
+dfKwic$context <- paste0(dfKwic$pre," ", dfKwic$post)
+
+textplot(dfKwic$context)
+```

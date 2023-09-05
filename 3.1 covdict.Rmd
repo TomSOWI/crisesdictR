@@ -40,45 +40,64 @@ table(df2019$pattern)
 ```
 
 ```{r}
-covdict <- list(corona = corona)
-covdict <- dictionary(covdict)
-
+covdict <- dictionary(list(corona = corona))
 
 dfm <- dfm(raw_corpus)
+
 results <- dfm%>%
   dfm_tolower()%>%
   dfm_lookup(covdict)
 
+dfCorona <- convert(results, to = "data.frame")
 
-df <- convert(results, to = "data.frame")
+#df$year <- as.numeric(substring(docvars(dfm)$date, 1,4))
+#df$month <- paste0(substring(docvars(dfm)$date, 1,4),"-",substring(docvars(dfm)$date, 6,7), sep = "")
+dfCorona$quarter <- floor_date(docvars(dfm)$date, "quarter")
 
-
-df$year <- as.numeric(substring(docvars(dfm)$date, 1,4))
-df$month <- paste0(substring(docvars(dfm)$date, 6,7),"-", substring(docvars(dfm)$date, 1,4), sep = "")
-
-results_year <- df %>%
-  select(year, corona)%>%
-  group_by(year)%>%
+results_quarter <- dfCorona %>%
+  select(quarter, corona)%>%
+  group_by(quarter)%>%
   reframe(
     corona = sum(corona)
   )
-
-results_month <- df %>%
-  select(month, corona)%>%
-  group_by(month)%>%
-  reframe(
-    corona = sum(corona)
-  )
-
-
-
 
 ```
 
 
-### Korrelation
+## Validierung
+
+### Konstruktvalidität
 
 ```{r}
-cor(results_year$corona, dfSum$Coronavirus)
+dfVal <- merge(results_quarter, dfGroup1)
+
+cor(dfCor$corona, dfCor$Corona)
+```
+### Split-half reliabilität
+
+
+### Wordclouds
+
+```{r}
+textplot <- function(text, min_freq = 25){
+  text <- gsub("dass","",text)
+  dtm <- dfm(text) %>%
+    dfm(remove = stopwords('german')) %>%
+    dfm_wordstem() %>%
+    dfm_trim(min_termfreq = min_freq , verbose = FALSE)
+  
+  set.seed(100)
+  textplot_wordcloud(dtm)
+  
+}
 ```
 
+```{r}
+dfKwic <- as.data.frame(kwic(toks,
+           pattern = corona, separator = " "))
+
+
+dfKwic$context <- paste0(dfKwic$pre," ", dfKwic$post)
+
+textplot(dfKwic$context)
+```

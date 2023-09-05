@@ -10,22 +10,19 @@ speeches2001 <- readRDS("~/R/R Projekte/crisesdictR/speeches/speeches2001.RDS")
 raw_corpus <- corpus(speeches2001, text_field = "speech_content")
 
 
+
 raw_corpus <- gsub("\\(\\{\\d*\\}\\)", "", raw_corpus)
 raw_corpus <- gsub("[[:punct:]]", "", raw_corpus)
 raw_corpus <- gsub("\\n", " ", raw_corpus)
+raw_corpus <- gsub("dass", "", raw_corpus)
+#raw_corpus <- gsub(stopwords("de"), "", raw_corpus)
 
-
-
+toks <- tokens(raw_corpus)%>%
+  tokens_tolower()%>%
+  tokens_remove(stopwords("de"))
 
 #toks <- tokens(raw_corpus)
 #tokens_tolower(toks)
 ```
 
-```{r}
-dfKwic <- as.data.frame(kwic(tokens(raw_corpus),
-           pattern = rukrieg, separator = " "))
-
-
-dfKwic
-```
 
