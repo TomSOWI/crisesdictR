@@ -17,7 +17,7 @@ df$year <- as.numeric(substring(df$...2, 7,11))
 
 df$...1 <- NULL
 df$...2 <- NULL
-
+re
 dfSum <- aggregate(df, by = list(df$year), FUN = sum)
 
 df$year <- 9999
@@ -42,6 +42,13 @@ ggplot(dfMelt, aes(x = year, y = value, group = variable, color = variable))+
 #Flüchtlinge
 #Arbeitslosigkeit? - bis 2013
 #Ukrainekrieg
+```
+### Corona
+```{r}
+
+#remove spalte mit Jahr 2000 und 2023
+#rsetzung von NA mit 0
+dfSum$Coronavirus[dfSum$Coronavirus == NA] <- 0
 ```
 
 

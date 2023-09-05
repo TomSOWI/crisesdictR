@@ -74,3 +74,12 @@ presie <- c("Inflation", "ungeheurliche Preise", "Preissteigerung", "unbezahlbar
 
 ```
 
+### Krisen
+
+```{r}
+
+krisen <- c("Not","")
+
+
+```
+

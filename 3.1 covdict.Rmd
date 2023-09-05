@@ -13,7 +13,7 @@ corona <- c("Impfgegner", "Covid-19", "SARS-CoV-2", "Pandemie", "China-Virus", "
 aussortiert <- c("Meinungsfreiheit","impf*")
 
 
-covdict <- c("pandemie", "corona*", "covid-19","china-virus","corona-leugner","impfgegner","sars-cov-2", "lockdown","omikron","mrna","testzentr*")
+corona <- c("pandemie", "corona*", "covid-19","china-virus","corona-leugner","impfgegner","sars-cov-2", "lockdown","omikron","mrna","testzentr*")
 
             
 unternehmen <-c("astrazeneca","biontech","pfizer", "johnson & johnson","moderna") #sinnvoll
@@ -40,16 +40,45 @@ table(df2019$pattern)
 ```
 
 ```{r}
-covdict <- list(covdict)
+covdict <- list(corona = corona)
 covdict <- dictionary(covdict)
 
-dict
 
 dfm <- dfm(raw_corpus)
-
-
-dfm <- dfm%>%
+results <- dfm%>%
   dfm_tolower()%>%
   dfm_lookup(covdict)
+
+
+df <- convert(results, to = "data.frame")
+
+
+df$year <- as.numeric(substring(docvars(dfm)$date, 1,4))
+df$month <- paste0(substring(docvars(dfm)$date, 6,7),"-", substring(docvars(dfm)$date, 1,4), sep = "")
+
+results_year <- df %>%
+  select(year, corona)%>%
+  group_by(year)%>%
+  reframe(
+    corona = sum(corona)
+  )
+
+results_month <- df %>%
+  select(month, corona)%>%
+  group_by(month)%>%
+  reframe(
+    corona = sum(corona)
+  )
+
+
+
+
+```
+
+
+### Korrelation
+
+```{r}
+cor(results_year$corona, dfSum$Coronavirus)
 ```
 

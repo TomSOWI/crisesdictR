@@ -1,0 +1,77 @@
+---
+title: "3.2 flüchtlinge"
+output: html_document
+date: "2023-08-21"
+---
+
+### Corona
+
+```{r}
+flüchtlinge <- c("(Binnen)", "Flüchtling*", "Geflüchtet*", "globaler Flüchtlingspakt", "Syrien", "Migranten*", "Genfer Flüchtlingskonvention", "Flüchtlingslager", "Asylbewerber*", "Asyl", "Aufenthaltserlaubnis", "Einwanderung*", "Aufenthaltstitel", "Illegal", "Herkunftsstaat*", "Dublin-Verordnung")
+
+refugeedict <- c("*flüchtling*", "einwanderung","*migra*","asyl","*integration*")
+
+#2015 darf sich nicht wiederholen
+#krise
+#syrien
+#
+```
+
+
+```{r}
+dfKwic <- as.data.frame(kwic(tokens_tolower(tokens(raw_corpus)),
+           pattern = refugeedict, separator = " "))
+
+
+dates <- data.frame(docname = docnames(raw_corpus), date = docvars(raw_corpus)$date)
+dates$year <- as.numeric(substring(dates$date, 1,4))
+
+
+
+table(dfKwic$pattern)
+
+
+
+```
+
+```{r}
+refugeedict<- list(refugees = refugeedict)
+refugeedict <- dictionary(refugeedict)
+
+
+dfm <- dfm(raw_corpus)
+results <- dfm%>%
+  dfm_tolower()%>%
+  dfm_lookup(refugeedict)
+
+
+df <- convert(results, to = "data.frame")
+
+
+df$year <- as.numeric(substring(docvars(dfm)$date, 1,4))
+df$month <- paste0(substring(docvars(dfm)$date, 6,7),"-", substring(docvars(dfm)$date, 1,4), sep = "")
+
+results_year <- df %>%
+  select(year, refugees)%>%
+  group_by(year)%>%
+  reframe(
+    corona = sum(refugees)
+  )
+
+results_month <- df %>%
+  select(month, refugees)%>%
+  group_by(month)%>%
+  reframe(
+    corona = sum(refugees)
+  )
+
+```
+
+
+### Korrelation
+
+```{r}
+#cor(results_year$corona, dfSum$Coronavirus)
+
+```
+

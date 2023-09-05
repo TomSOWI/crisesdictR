@@ -1,0 +1,77 @@
+---
+title: "3.2 klima"
+output: html_document
+date: "2023-08-21"
+---
+
+```{r}
+klima <- c("letzte Generation", "Klimakleber", "Frust", "Energiekrise", "Fridays-For-Future/ FFF", "Extinction Rebellion", "1,5 Grad Ziel", "Überwärmung/ Überhitztung", "Gletscher schmelzen", "Klimakatastrophe", "Pariser(-)Konvention")
+```
+
+
+```{r}
+
+klima <- c("*klima*", "1,5 grad ziel", "fff", "fridays for future", "letzte generation", "extinction rebellion")
+
+#energiekrise
+
+
+```
+
+
+```{r}
+dfKwic <- as.data.frame(kwic(tokens_tolower(tokens(raw_corpus)),
+           pattern = phrase(klima), separator = " "))
+
+
+dates <- data.frame(docname = docnames(raw_corpus), date = docvars(raw_corpus)$date)
+dates$year <- as.numeric(substring(dates$date, 1,4))
+
+
+
+table(dfKwic$pattern)
+
+
+
+```
+
+```{r}
+klimadict<- list(klima = klima)
+klimadict <- dictionary(klimadict)
+
+
+dfm <- dfm(raw_corpus)
+results <- dfm%>%
+  dfm_tolower()%>%
+  dfm_lookup(klimadict)
+
+
+df <- convert(results, to = "data.frame")
+
+
+df$year <- as.numeric(substring(docvars(dfm)$date, 1,4))
+df$month <- paste0(substring(docvars(dfm)$date, 6,7),"-", substring(docvars(dfm)$date, 1,4), sep = "")
+
+results_year <- df %>%
+  select(year, klima)%>%
+  group_by(year)%>%
+  reframe(
+    klima = sum(klima)
+  )
+
+results_month <- df %>%
+  select(month, klima)%>%
+  group_by(month)%>%
+  reframe(
+    klima = sum(klima)
+  )
+
+```
+
+
+### Korrelation
+
+```{r}
+#cor(results_year$corona, dfSum$Coronavirus)
+
+```
