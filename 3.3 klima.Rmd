@@ -11,9 +11,9 @@ klima <- c("letzte Generation", "Klimakleber", "Frust", "Energiekrise", "Fridays
 
 ```{r}
 
-klima <- c("*klima*", "fridays for future", "letzte generation", "extinction rebellion","erderwärmung","erderhitzung","pariser-abkommen","pariser-konvention", "*treibhaus*")
+klima <- c("*klima*", "fridays for future", "letzte generation", "extinction rebellion","erderwärmung","erderhitzung","pariser-abkommen","pariser-konvention", "*treibhaus*","energiekrise")
 
-#energiekrise
+#energiekrise!!!
 #"1,5 grad ziel"
 #"*co2*"
 
@@ -25,7 +25,7 @@ dfKwic <- as.data.frame(kwic(toks,
            pattern = phrase(klima), separator = " "))
 
 
-dates <- data.frame(docname = docnames(raw_corpus), date = docvars(raw_corpus)$date)
+dates <- data.frame(docname = docnames(toks), date = docvars(toks)$date)
 dates$year <- as.numeric(substring(dates$date, 1,4))
 
 dfMerged <- merge(dfKwic,dates)
@@ -40,17 +40,16 @@ table(dfKwic$pattern)
 klimadict<- dictionary(list(klima = klima))
 
 
-dfm <- dfm(raw_corpus)
+dfm <- dfm(toks)
 
 results <- dfm%>%
-  dfm_tolower()%>%
   dfm_lookup(klimadict)
 
 dfKlima <- convert(results, to = "data.frame")
 
 dfKlima$quarter <- floor_date(docvars(dfm)$date, "quarter")
 
-results_quarter <- dfKlima %>%
+results_klima <- dfKlima %>%
   select(quarter, klima)%>%
   group_by(quarter)%>%
   reframe(
@@ -65,7 +64,7 @@ results_quarter <- dfKlima %>%
 ### Konstruktvalidität
 
 ```{r}
-dfVal <- merge(results_quarter, dfGroup1)
+dfVal <- merge(results_klima, dfGroup1)
 
 cor(dfVal$klima, dfVal$Klima)
 ```

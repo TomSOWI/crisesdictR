@@ -6,26 +6,26 @@ date: "2023-08-21"
 ### Corona
 
 ```{r}
-corona <- c("Impfgegner", "Covid-19", "SARS-CoV-2", "Pandemie", "China-Virus", "Impfpflicht", "AstraZeneca", "Testzentrum", "Verschwörung(stheorien)", "Corona-Leugner", "Corona-Klage", "Maskenpflicht","Impfung")
+#corona <- c("Impfgegner", "Covid-19", "SARS-CoV-2", "Pandemie", "China-Virus", "Impfpflicht", "AstraZeneca", "Testzentrum", "Verschwörung(stheorien)", #"Corona-Leugner", "Corona-Klage", "Maskenpflicht","Impfung")
 
 
 
-aussortiert <- c("Meinungsfreiheit","impf*")
+#aussortiert <- c("Meinungsfreiheit","impf*")
 
 
 corona <- c("pandemie", "corona*", "covid-19","china-virus","corona-leugner","impfgegner","sars-cov-2", "lockdown","omikron","mrna","testzentr*")
 
             
-unternehmen <-c("astrazeneca","biontech","pfizer", "johnson & johnson","moderna") #sinnvoll
+#unternehmen <-c("astrazeneca","biontech","pfizer", "johnson & johnson","moderna") #sinnvoll
 ```
 
 
 ```{r}
-dfKwic <- as.data.frame(kwic(tokens_tolower(tokens(raw_corpus)),
+dfKwic <- as.data.frame(kwic(toks,
            pattern = covdict, separator = " "))
 
 
-dates <- data.frame(docname = docnames(raw_corpus), date = docvars(raw_corpus)$date)
+dates <- data.frame(docname = docnames(toks), date = docvars(toks)$date)
 dates$year <- as.numeric(substring(dates$date, 1,4))
 
 dfMerged <- merge(dfKwic,dates)
@@ -42,10 +42,9 @@ table(df2019$pattern)
 ```{r}
 covdict <- dictionary(list(corona = corona))
 
-dfm <- dfm(raw_corpus)
+dfm <- dfm(toks)
 
 results <- dfm%>%
-  dfm_tolower()%>%
   dfm_lookup(covdict)
 
 dfCorona <- convert(results, to = "data.frame")
@@ -54,7 +53,7 @@ dfCorona <- convert(results, to = "data.frame")
 #df$month <- paste0(substring(docvars(dfm)$date, 1,4),"-",substring(docvars(dfm)$date, 6,7), sep = "")
 dfCorona$quarter <- floor_date(docvars(dfm)$date, "quarter")
 
-results_quarter <- dfCorona %>%
+results_corona <- dfCorona %>%
   select(quarter, corona)%>%
   group_by(quarter)%>%
   reframe(
@@ -69,7 +68,7 @@ results_quarter <- dfCorona %>%
 ### Konstruktvalidität
 
 ```{r}
-dfVal <- merge(results_quarter, dfGroup1)
+dfVal <- merge(results_corona, dfGroup1)
 
 cor(dfCor$corona, dfCor$Corona)
 ```

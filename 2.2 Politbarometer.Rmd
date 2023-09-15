@@ -12,30 +12,36 @@ df <- read_delim("politbarometer_zeitreihe.csv",
 
 ### größte Krisen nach Politbarometer
 ```{r}
-df$year <- as.numeric(substring(df$...2, 7,11))
-#df2001 <- df[df$year >= 2001,]
-
-#df$...1 <- NULL
-#df$...2 <- NULL
-
-dfSum <- aggregate(df, by = list(df$year), FUN = sum)
-
-df$year <- 9999
-dfMean <- aggregate(df, by = list(df$year), FUN = mean, na.action = na.omit)
+df$dates <- as.Date(df$...2, format = "%d.%m.%Y")
+df$quarter <- floor_date(df$dates, "quarter")
+df$...1 <- NULL
+df$...2 <- NULL
+df$dats <- NULL
+df2013 <- df[df$quarter >= "2013-10-01",]
 
 
-#?aggregate
+
+
+dfMean <- aggregate(df2013, by = list(df2013$quarter), FUN = mean, na.action = na.omit)
+
+dfMean$dates <- NULL
+
 ```
 
 ```{r}
-dfSum$year <- dfSum$Group.1
-dfSum$Group.1 <- NULL
+dfMean$quarter <- dfMean$Group.1
+dfMean$Group.1 <- NULL
 
-dfMelt <- melt(dfSum, id.vars = "year")
+dfMelt <- melt(dfMean, id.vars = "quarter")
 
-ggplot(dfMelt, aes(x = year, y = value, group = variable, color = variable))+
-         geom_line()+
-         theme_bw()
+dfMelt$value <- ifelse(is.na(dfMelt$value),0, dfMelt$value)
+
+
+ggplot(dfMelt, aes(x = quarter, y = (value/100), group = variable, color = variable))+
+        geom_line()+
+        labs(x = "Jahre", y = "aggregierter Prozentanteil", color = "Probleme")+
+        scale_y_continuous(labels = scales::percent)+
+        theme_bw()
         
 
 #Klima, Corona,
@@ -93,6 +99,8 @@ dfGroup2 <- df2013%>%
     UkraineKrieg = mean(`Ukraine/Krieg/Russland`),
     Total = sum(Corona) + sum(Flüchtlinge) + sum(Klima) + sum(UkraineKrieg)
   )
+
+
 ```
 
 ### Seit 2001 in Jahren
@@ -127,6 +135,9 @@ dfGroup1 <- df2001%>%
 ### Quarters
 
 ```{r}
+df <- read_delim("politbarometer_zeitreihe.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+
 df$dates <- as.Date(df$...2, format = "%d.%m.%Y")
 df$quarter <- floor_date(df$dates, "quarter")
 
@@ -145,6 +156,13 @@ dfGroup1 <- df%>%
     UkraineKrieg = mean(`Ukraine/Krieg/Russland`)
     #Total = sum(Corona) + sum(Flüchtlinge) + sum(Klima) + sum(UkraineKrieg)
   )
+
+
+dfMelt <- melt(dfGroup1, id.vars = "quarter")
+
+ggplot(dfMelt, aes(x = quarter, y = value, group = variable, color = variable))+
+         geom_line()+
+         theme_bw()
 
 ```
 

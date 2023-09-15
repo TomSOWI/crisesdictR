@@ -1,0 +1,161 @@
+---
+title: "4.1 Regression"
+author: "Tom Klotz"
+date: "12 9 2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Krisenvariable
+
+```{r}
+crises <- merge(merge(results_corona, results_refugee), results_klima)
+
+#crises <- crises[crises$quarter >= 2013,]
+
+#z-transformation
+crises$corona_z <- scale(crises$corona, center = T)
+crises$refugee_z <- scale(crises$refugee, center = T)
+crises$klima_z <- scale(crises$klima, center = T)
+
+crises$crises <- crises$corona_z + crises$refugee_z + crises$klima_z
+
+
+ggplot(crises, aes(quarter, crises))+
+  geom_line()+
+  theme_bw()
+```
+
+## Populismus
+
+```{r}
+speeches2001 <- readRDS("~/Programming/R/R Projekte/crisesdictR/speeches/speeches2001.RDS")
+corp <- corpus(speeches2001, text_field = "speech_content")
+
+
+results <- popdictR::run_popdict(corp)
+results_df <- convert(results, to = "data.frame")
+
+table(results_df$dict_gruendl_2020)
+
+saveRDS(results_df, file = "gruendl.RDS")
+
+results_df$quarter <- floor_date(results_df$date, "quarter")
+
+results_populism <- results_df %>%
+  select(dict_gruendl_2020,n_sentences,quarter)%>%
+  group_by(quarter) %>%
+  reframe(
+    sentences = sum(n_sentences),
+    gruendl = sum(dict_gruendl_2020) / sentences * 100
+  )
+
+results_populism$pop_z <- scale(results_populism$gruendl, center = T)
+
+```
+#results_populism[results_populism$quarter >= 2013,]
+
+
+## Massenpolarisierung
+
+```{r}
+library(haven)
+poladata <- read_sav("ZA2391_v14-0-0.sav")
+
+poladata <- poladata %>%
+  filter(v4 >= 2001)
+
+poladata <- poladata %>%
+  select(v3, v4, v22 )
+
+
+
+dates <- ymd(paste0(poladata$v4, "-01-01"))
+
+
+
+
+
+floor_date(dates, "quarter")
+
+#das datum muss korrigiert werden
+library(stringr)
+poladata$v3 <- str_pad(poladata$v3, 2, pad = "0")
+poladata$v3 <- str_pad(poladata$v3, 3, pad = "-")
+
+poladata$date <- paste(poladata$v4, poladata$v3, sep = "")
+
+poladata$v22[poladata$v22 == 99] <- NA
+poladata <- na.omit(poladata)
+
+poladata <- poladata %>%
+  select(v22, date)
+
+### Quarter
+
+poladata1 <- crises$quarter
+poldata1$lire <- 
+
+
+summary_3 <- poladata %>%
+  group_by(date) %>%
+  summarise(sd_leftright = sd(v22))
+
+poladata1 <- crises$quarter
+poldata1$lire <- NA
+
+poldata$lire <- ifelse(substr(poldata$quarter, 1, 4) == "2001", summary3[summary3$date == 2001, ]$sd_leftright, NA)
+
+  
+  
+
+summary_3 <- summary_3 %>%
+  mutate(sd_leftright_z = scale(sd_leftright))
+##so, fertig.
+
+is.numeric(summary_3$sd_leftright_z)
+
+ggplot(summary_3, aes(x = date, y = sd_leftright_z, group = 1, color = sd_leftright))+
+  geom_line()+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90))
+
+summary_3
+```
+
+
+```{r}
+
+
+
+```
+
+
+## Regression
+
+```{r}
+fit <- lm(results_populism$pop_z ~ crises$crises)
+summary(fit)
+
+fit <- lm(crises$crises ~ results_populism$pop_z)
+summary(fit)
+
+
+
+dfVis <- data.frame(quarter = results_populism$quarter, populism = results_populism$pop_z,crises = crises$crises)
+
+
+
+dfMelt <- melt(dfVis, id.vars = "quarter")
+
+ggplot(dfMelt, aes(x = quarter, y = value, group = variable, color = variable))+
+         geom_line()+
+         theme_bw()
+
+
+```
+
