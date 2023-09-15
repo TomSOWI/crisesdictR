@@ -85,7 +85,7 @@ results_refugee <- dfRefugee %>%
 ```{r}
 dfVal <- merge(results_refugee, dfGroup1)
 
-cor(dfVal$refugee, dfCor$Flüchtlinge)
+cor(dfVal$refugee, dfVal$Flüchtlinge)
 
 # 0.7218827
 ```
@@ -146,6 +146,10 @@ for (i in c(0:2)){
 }
   
 saveRDS(reliability, file = "refugeeRelia.RDS") 
+
+mean(unlist(refugeeRelia))
+
+min(unlist(refugeeRelia))
 ```
 
 ### Wordclouds
