@@ -13,19 +13,20 @@ date: "2023-08-21"
 #aussortiert <- c("Meinungsfreiheit","impf*")
 
 
-corona <- c("pandemie", "corona*", "covid-19","china-virus","corona-leugner","impfgegner","sars-cov-2", "lockdown","omikron","mrna","testzentr*")
+corona <- c("pandemie", "corona*", "covid*","lockdown","omikron","mrna","testzentr*")
 
             
-#unternehmen <-c("astrazeneca","biontech","pfizer", "johnson & johnson","moderna") #sinnvoll
+
 ```
 
 
 ```{r}
 dfKwic <- as.data.frame(kwic(toks,
-           pattern = covdict, separator = " "))
-
+           pattern = corona, separator = " "))
 
 dates <- data.frame(docname = docnames(toks), date = docvars(toks)$date)
+
+dates$quarter <- floor_date(dates$date, "quarter")
 dates$year <- as.numeric(substring(dates$date, 1,4))
 
 dfMerged <- merge(dfKwic,dates)
@@ -35,8 +36,20 @@ df2019 <- dfMerged[dfMerged$year >= 2019,]
 
 table(dfunter2019$pattern)
 table(df2019$pattern)
+dfMerged$count <- 1
+
+dfMerged <- dfMerged[dfMerged$quarter >= "2013-10-01",]
+
+dfVis <- dfMerged%>%
+  select(quarter, pattern, count)%>%
+  group_by(quarter, pattern)%>%
+  reframe(count = sum(count))
+  
 
 
+ggplot(dfVis, aes(x = quarter, y = count,color = pattern))+
+  geom_line()+
+  labs(x = "Quartale", y = "Anzahl", color = "Pattern")
 ```
 
 ```{r}
@@ -49,8 +62,6 @@ results <- dfm%>%
 
 dfCorona <- convert(results, to = "data.frame")
 
-#df$year <- as.numeric(substring(docvars(dfm)$date, 1,4))
-#df$month <- paste0(substring(docvars(dfm)$date, 1,4),"-",substring(docvars(dfm)$date, 6,7), sep = "")
 dfCorona$quarter <- floor_date(docvars(dfm)$date, "quarter")
 
 results_corona <- dfCorona %>%
@@ -70,9 +81,70 @@ results_corona <- dfCorona %>%
 ```{r}
 dfVal <- merge(results_corona, dfGroup1)
 
-cor(dfCor$corona, dfCor$Corona)
+cor(dfVal$corona, dfVal$Corona)
 ```
 ### Split-half reliabilität
+
+```{r}
+pattern <- corona
+reliability <- list()
+
+dfm <- dfm(toks)%>%
+  dfm_tolower()
+
+dates <- data.frame(docname = docnames(toks), date = docvars(toks)$date)
+dates$quarter <- floor_date(dates$date, "quarter")
+
+
+for (i in c(0:2)){
+  
+  half_1 <- sample(
+  x = pattern,
+  size = round(length(pattern)/2, 0),
+  replace = FALSE
+  )
+  half_1 <- dictionary(list(half_1 = half_1))
+  half_2 <- dictionary(list(half_2 = pattern[!(pattern %in% half_1)]))
+  
+  
+  results1 <- dfm%>%
+  dfm_lookup(half_1)
+  
+  results1 <- convert(results1, to = "data.frame")
+  results1$quarter <- floor_date(docvars(dfm)$date, "quarter")
+
+  results1 <- results1 %>%
+    select(quarter, half_1)%>%
+    group_by(quarter)%>%
+    reframe(
+      half_1 = sum(half_1)
+    )
+  
+  
+  results2 <- dfm%>%
+  dfm_lookup(half_2)
+  
+  results2 <- convert(results2, to = "data.frame")
+  results2$quarter <- floor_date(docvars(dfm)$date, "quarter")
+
+  results2 <- results2 %>%
+    select(quarter, half_2)%>%
+    group_by(quarter)%>%
+    reframe(
+      half_2 = sum(half_2)
+    )
+  
+
+  relia <- spearman_brown(results1$half_1,  results2$half_2)
+  reliability[i] <- relia
+}
+  
+saveRDS(reliability, file = "coronaRelia.RDS") 
+
+mean(unlist(coronaRelia))
+
+min(unlist(coronaRelia))
+```
 
 
 ### Wordclouds
