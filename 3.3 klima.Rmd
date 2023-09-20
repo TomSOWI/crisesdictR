@@ -5,7 +5,7 @@ date: "2023-08-21"
 ---
 
 ```{r}
-klima <- c("letzte Generation", "Klimakleber", "Frust", "Energiekrise", "Fridays-For-Future/ FFF", "Extinction Rebellion", "1,5 Grad Ziel", "Überwärmung/ Überhitztung", "Gletscher schmelzen", "Klimakatastrophe", "Pariser(-)Konvention")
+#klima <- c("letzte Generation", "Klimakleber", "Frust", "Energiekrise", "Fridays-For-Future/ FFF", "Extinction Rebellion", "1,5 Grad Ziel", "Überwärmung/ Überhitztung", "Gletscher schmelzen", "Klimakatastrophe", "Pariser(-)Konvention")
 ```
 
 
@@ -13,12 +13,6 @@ klima <- c("letzte Generation", "Klimakleber", "Frust", "Energiekrise", "Fridays
 
 klima <- c("klima*","fridays","erderwärmung","erderhitzung","energiekrise","energieknappheit", "*versorgungssicherheit","energieversorgung")
 
-#"erneuerbareenergien*"
-# ,"regenerativ*"
-#"erneuerbar*"
-#"energiewende"
-#"energieversorgung"
-#, "*treibhaus*"
 ```
 
 ```{r}
@@ -74,6 +68,15 @@ results_klima <- dfKlima %>%
     klima = sum(klima)
   )
 
+#Month
+dfKlima$month <- floor_date(docvars(dfm)$date, "month")
+
+results_klima_m <- dfKlima %>%
+  select(month, klima)%>%
+  group_by(month)%>%
+  reframe(
+    klima = sum(klima)
+  )
 ```
 
 

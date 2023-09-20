@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 crises <- merge(merge(results_corona, results_refugee), results_klima)
 
-#crises <- crises[crises$quarter >= 2013,]
+crises <- crises[crises$quarter >= "2013-10-01",]
 
 #z-transformation
 crises$corona_z <- scale(crises$corona, center = T)
@@ -23,16 +23,18 @@ crises$refugee_z <- scale(crises$refugee, center = T)
 crises$klima_z <- scale(crises$klima, center = T)
 
 crises$crises <- crises$corona_z + crises$refugee_z + crises$klima_z
-
+crises$crises_z <- scale(crises$crises, center = T)
 
 ggplot(crises, aes(quarter, crises))+
   geom_line()+
-  theme_bw()
+  theme_bw()+
+  labs(y = "Krisen-Score", x = "Quartale")
 ```
 
 ## Populismus
 
 ```{r}
+gc()
 speeches2001 <- readRDS("~/Programming/R/R Projekte/crisesdictR/speeches/speeches2001.RDS")
 corp <- corpus(speeches2001, text_field = "speech_content")
 
@@ -51,111 +53,284 @@ results_populism <- results_df %>%
   group_by(quarter) %>%
   reframe(
     sentences = sum(n_sentences),
-    gruendl = sum(dict_gruendl_2020) / sentences * 100
+    gruendl = (sum(dict_gruendl_2020) / sentences * 100)
   )
+
+results_populism <- results_populism[results_populism$quarter >= "2013-10-01",]
 
 results_populism$pop_z <- scale(results_populism$gruendl, center = T)
 
-```
-#results_populism[results_populism$quarter >= 2013,]
-
-
-## Massenpolarisierung
-
-```{r}
-library(haven)
-poladata <- read_sav("ZA2391_v14-0-0.sav")
-
-poladata <- poladata %>%
-  filter(v4 >= 2001)
-
-poladata <- poladata %>%
-  select(v3, v4, v22 )
-
-
-
-dates <- ymd(paste0(poladata$v4, "-01-01"))
-
-
-
-
-
-floor_date(dates, "quarter")
-
-#das datum muss korrigiert werden
-library(stringr)
-poladata$v3 <- str_pad(poladata$v3, 2, pad = "0")
-poladata$v3 <- str_pad(poladata$v3, 3, pad = "-")
-
-poladata$date <- paste(poladata$v4, poladata$v3, sep = "")
-
-poladata$v22[poladata$v22 == 99] <- NA
-poladata <- na.omit(poladata)
-
-poladata <- poladata %>%
-  select(v22, date)
-
-### Quarter
-
-poladata1 <- crises$quarter
-poldata1$lire <- 
-
-
-summary_3 <- poladata %>%
-  group_by(date) %>%
-  summarise(sd_leftright = sd(v22))
-
-poladata1 <- crises$quarter
-poldata1$lire <- NA
-
-poldata$lire <- ifelse(substr(poldata$quarter, 1, 4) == "2001", summary3[summary3$date == 2001, ]$sd_leftright, NA)
-
-  
-  
-
-summary_3 <- summary_3 %>%
-  mutate(sd_leftright_z = scale(sd_leftright))
-##so, fertig.
-
-is.numeric(summary_3$sd_leftright_z)
-
-ggplot(summary_3, aes(x = date, y = sd_leftright_z, group = 1, color = sd_leftright))+
+ggplot(results_populism, aes(quarter, pop_z))+
   geom_line()+
   theme_bw()+
-  theme(axis.text.x = element_text(angle = 90))
+  labs(x = "Quartale",y = "Populismus-Score")
 
-summary_3
+
+#Month
+results_df$month <- floor_date(results_df$date, "month")
+
+
+results_populism_m <- results_df %>%
+  select(dict_gruendl_2020,n_sentences,month)%>%
+  group_by(month) %>%
+  reframe(
+    sentences = sum(n_sentences),
+    gruendl = sum(dict_gruendl_2020) / sentences * 100
+  )
+
+results_populism_m <- results_populism_m[results_populism_m$month >= "2013-10-01",]
 ```
 
-
-```{r}
-
-
-
-```
 
 
 ## Regression
 
 ```{r}
-fit <- lm(results_populism$pop_z ~ crises$crises)
-summary(fit)
+#erstes Modell
+fit1 <- lm(results_populism$pop_z ~ crises$crises_z)
+summary(fit1)
 
-fit <- lm(crises$crises ~ results_populism$pop_z)
-summary(fit)
+#Interaktionseffekt Legislaturperiode
+results_populism$legislatur <- ifelse(results_populism$quarter < "2017-10-01",0,ifelse(results_populism$quarter >= "2021-10-01",2,1))
+
+fit2 <- lm(results_populism$pop_z ~ crises$crises_z + crises$crises_z:results_populism$legislatur)
+summary(fit2)
+
+#Interaktionseffekt Anwesenheit AfD
+
+results_populism$afd <- ifelse(results_populism$quarter < "2017-10-01",0,1)
+
+fit3 <- lm(results_populism$pop_z ~ crises$crises_z + crises$crises_z:results_populism$afd)
+summary(fit3)
 
 
-
-dfVis <- data.frame(quarter = results_populism$quarter, populism = results_populism$pop_z,crises = crises$crises)
-
-
+#Visualisierung
+dfVis <- data.frame(quarter = results_populism$quarter, populism = results_populism$pop_z,crises = crises$crises_z)
 
 dfMelt <- melt(dfVis, id.vars = "quarter")
 
 ggplot(dfMelt, aes(x = quarter, y = value, group = variable, color = variable))+
-         geom_line()+
-         theme_bw()
+        geom_line()+
+        theme_bw()+
+        labs(x = "Quartale", y = "z-transformierte Werte", color = "Variable")
+        
+```
+
+## Weitere Visualisierung [quarter]
+
+```{r}
+### 18. Legislatur  ------------------------------------------------------------
+crises <- merge(merge(results_corona, results_refugee), results_klima)
+
+crises <- crises[crises$quarter >= "2013-10-01" & crises$quarter < "2017-10-01",]
+
+#z-transformation
+crises$corona_z <- scale(crises$corona, center = T)
+crises$refugee_z <- scale(crises$refugee, center = T)
+crises$klima_z <- scale(crises$klima, center = T)
+
+crises$crises <- crises$corona_z + crises$refugee_z + crises$klima_z
+
+results_populism <- results_populism[results_populism$quarter < "2017-10-01", ]
+#merge for Vis
+dfVis <- data.frame(quarter = results_populism$quarter, populism = results_populism$gruendl,crises = crises$crises)
+#dfVis <- dfVis[dfVis$quarter < "2017-10-01",]
+
+dfVis$populism <- scale(dfVis$populism, center = T)
+dfVis$crises <- scale(dfVis$crises, center = T)
+
+dfMelt <- melt(dfVis, id.vars = "quarter")
+
+grafik18 <- ggplot(dfMelt, aes(x = quarter, y = value, group = variable, color = variable))+
+        geom_line()+
+        theme_bw()+
+        labs(x = "Quartale", y = "z-transformierte Werte", color = "Variable")
+
+### 19. Legislatur  ------------------------------------------------------------
+
+crises <- merge(merge(results_corona, results_refugee), results_klima)
+
+crises <- crises[crises$quarter >= "2017-10-01" & crises$quarter < "2021-10-01",]
+
+#z-transformation
+crises$corona_z <- scale(crises$corona, center = T)
+crises$refugee_z <- scale(crises$refugee, center = T)
+crises$klima_z <- scale(crises$klima, center = T)
+
+crises$crises <- crises$corona_z + crises$refugee_z + crises$klima_z
+
+results_populism <- results_populism[results_populism$quarter >= "2017-10-01"& results_populism$quarter < "2021-10-01",]
+
+#merge for Vis
+dfVis <- data.frame(quarter = results_populism$quarter, populism = results_populism$gruendl,crises = crises$crises)
+#dfVis <- dfVis[dfVis$quarter < "2017-10-01",]
+
+dfVis$populism <- scale(dfVis$populism, center = T)
+dfVis$crises <- scale(dfVis$crises, center = T)
+
+dfMelt <- melt(dfVis, id.vars = "quarter")
+
+grafik19 <- ggplot(dfMelt, aes(x = quarter, y = value, group = variable, color = variable))+
+        geom_line()+
+        theme_bw()+
+        labs(x = "Quartale", y = "z-transformierte Werte", color = "Variable")
+
+### 20. Legislatur  -------------------------------------------------------------
+
+
+crises <- merge(merge(results_corona, results_refugee), results_klima)
+
+crises <- crises[crises$quarter >= "2021-10-01",]
+
+#z-transformation
+crises$corona_z <- scale(crises$corona, center = T)
+crises$refugee_z <- scale(crises$refugee, center = T)
+crises$klima_z <- scale(crises$klima, center = T)
+
+crises$crises <- crises$corona_z + crises$refugee_z + crises$klima_z
+
+results_populism <- results_populism[results_populism$quarter >= "2021-10-01",]
+
+#merge for Vis
+dfVis <- data.frame(quarter = results_populism$quarter, populism = results_populism$gruendl,crises = crises$crises)
+#dfVis <- dfVis[dfVis$quarter < "2017-10-01",]
+
+dfVis$populism <- scale(dfVis$populism, center = T)
+dfVis$crises <- scale(dfVis$crises, center = T)
+
+dfMelt <- melt(dfVis, id.vars = "quarter")
+
+grafik20 <- ggplot(dfMelt, aes(x = quarter, y = value, group = variable, color = variable))+
+        geom_line()+
+        theme_bw()+
+        labs(x = "Quartale", y = "z-transformierte Werte", color = "Variable")
+
+#Zusammenfassung
+
+grid.arrange(grafik18, grafik19,grafik20)
+
+```
+
+## Weitere Visualisierungen [month]
+
+```{r}
+#18. Legislaturperiode ---------------------------------------------------------
+crises <- merge(merge(results_corona_m, results_refugee_m), results_klima_m)
+
+crises <- crises[crises$month >= "2013-10-01" & crises$month < "2017-10-01",]
+
+#z-transformation
+crises$corona_z <- scale(crises$corona, center = T)
+crises$refugee_z <- scale(crises$refugee, center = T)
+crises$klima_z <- scale(crises$klima, center = T)
+
+crises$crises <- crises$corona_z + crises$refugee_z + crises$klima_z
+crises$crises_z <- scale(crises$crises, center = TRUE)
+
+results_populism_m <- results_populism_m[results_populism_m$month < "2017-10-01", ]
+#merge for Vis
+dfVis <- data.frame(month = results_populism_m$month, populism = results_populism_m$gruendl,crises = crises$crises_z)
+dfVis$populism <- scale(dfVis$populism, center = T)
+
+
+dfMelt <- melt(dfVis, id.vars = "month")
+
+grafik18 <- ggplot(dfMelt, aes(x = month, y = value, group = variable, color = variable))+
+        geom_line()+
+        theme_bw()+
+        labs(x = "Monate", y = "z-transformierte Werte", color = "Variable")
+
+#19. Legislaturperiode ---------------------------------------------------------
+
+crises <- merge(merge(results_corona_m, results_refugee_m), results_klima_m)
+
+crises <- crises[crises$month >= "2017-10-01" & crises$month < "2021-10-01",]
+
+#z-transformation
+crises$corona_z <- scale(crises$corona, center = T)
+crises$refugee_z <- scale(crises$refugee, center = T)
+crises$klima_z <- scale(crises$klima, center = T)
+
+crises$crises <- crises$corona_z + crises$refugee_z + crises$klima_z
+crises$crises_z <- scale(crises$crises, center = TRUE)
+
+results_populism_m <- results_populism_m[results_populism_m$month >= "2017-10-01" & results_populism_m$month < "2021-10-01", ]
+#merge for Vis
+dfVis <- data.frame(month = results_populism_m$month, populism = results_populism_m$gruendl,crises = crises$crises_z)
+dfVis$populism <- scale(dfVis$populism, center = T)
+
+
+dfMelt <- melt(dfVis, id.vars = "month")
+
+grafik19 <- ggplot(dfMelt, aes(x = month, y = value, group = variable, color = variable))+
+        geom_line()+
+        theme_bw()+
+        labs(x = "Monate", y = "z-transformierte Werte", color = "Variable")
+
+#20. Legislaturperiode ---------------------------------------------------------
+
+crises <- merge(merge(results_corona_m, results_refugee_m), results_klima_m)
+
+crises <- crises[crises$month >= "2021-10-01",]
+
+#z-transformation
+crises$corona_z <- scale(crises$corona, center = T)
+crises$refugee_z <- scale(crises$refugee, center = T)
+crises$klima_z <- scale(crises$klima, center = T)
+
+crises$crises <- crises$corona_z + crises$refugee_z + crises$klima_z
+crises$crises_z <- scale(crises$crises, center = TRUE)
+
+results_populism_m <- results_populism_m[results_populism_m$month >= "2021-10-01", ]
+#merge for Vis
+dfVis <- data.frame(month = results_populism_m$month, populism = results_populism_m$gruendl,crises = crises$crises_z)
+dfVis$populism <- scale(dfVis$populism, center = T)
+
+
+dfMelt <- melt(dfVis, id.vars = "month")
+
+grafik20 <- ggplot(dfMelt, aes(x = month, y = value, group = variable, color = variable))+
+        geom_line()+
+        theme_bw()+
+        labs(x = "Monate", y = "z-transformierte Werte", color = "Variable")
+
+#Zusammenfassung
+grid.arrange(grafik18,grafik19,grafik20)
 
 
 ```
+
+## Weitere Visualisierungen Anwesenheit AfD
+```{r}
+#19. + 20. Legislaturperiode ---------------------------------------------------------
+
+crises <- merge(merge(results_corona_m, results_refugee_m), results_klima_m)
+
+crises <- crises[crises$month >= "2017-10-01",]
+
+#z-transformation
+crises$corona_z <- scale(crises$corona, center = T)
+crises$refugee_z <- scale(crises$refugee, center = T)
+crises$klima_z <- scale(crises$klima, center = T)
+
+crises$crises <- crises$corona_z + crises$refugee_z + crises$klima_z
+crises$crises_z <- scale(crises$crises, center = TRUE)
+
+results_populism_m <- results_populism_m[results_populism_m$month >= "2017-10-01", ]
+#merge for Vis
+dfVis <- data.frame(month = results_populism_m$month, populism = results_populism_m$gruendl,crises = crises$crises_z)
+dfVis$populism <- scale(dfVis$populism, center = T)
+
+
+dfMelt <- melt(dfVis, id.vars = "month")
+
+grafik21 <- ggplot(dfMelt, aes(x = month, y = value, group = variable, color = variable))+
+        geom_line()+
+        theme_bw()+
+        labs(x = "Monate", y = "z-transformierte Werte", color = "Variable")
+
+#Zusammenfassung
+grid.arrange(grafik18,grafik21)
+```
+
 

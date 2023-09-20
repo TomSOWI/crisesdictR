@@ -44,94 +44,10 @@ ggplot(dfMelt, aes(x = quarter, y = (value/100), group = variable, color = varia
         theme_bw()
         
 
-#Klima, Corona,
-#Flüchtlinge
-#Arbeitslosigkeit? - bis 2013
-#Ukrainekrieg
-```
-### Corona
-```{r}
-
-#remove spalte mit Jahr 2000 und 2023
-#rsetzung von NA mit 0
-dfSum$Coronavirus[dfSum$Coronavirus == NA] <- 0
-```
-
-
-
-### Seit 2013 in Jahren
-Ukrainekrieg [2022]
-Corona[2020]
-
-
-```{r}
-df$date <- paste0(substring(df$...2, 7,11),"-",substring(df$...2,4,5)) #Monate
-df2013 <- df[df$date >= 2013,]
-
-
-dfGroup1 <- df2013%>%
-  select(`Energie/Versorgung/Klima`,Coronavirus,`Ausländer/Integration/Flüchtlinge`,`Ukraine/Krieg/Russland`,date)%>%
-  group_by(date)%>%
-    mutate(`Energie/Versorgung/Klima`= if_else(is.na(`Energie/Versorgung/Klima`), 0, `Energie/Versorgung/Klima`))%>%
-    mutate(Coronavirus= if_else(is.na(Coronavirus), 0, Coronavirus))%>%
-    mutate(`Ausländer/Integration/Flüchtlinge`= if_else(is.na(`Ausländer/Integration/Flüchtlinge`), 0, `Ausländer/Integration/Flüchtlinge`))%>%
-    mutate(`Ukraine/Krieg/Russland`= if_else(is.na(`Ukraine/Krieg/Russland`), 0, `Ukraine/Krieg/Russland`))%>%
-  reframe(
-    Flüchtlinge = mean(`Ausländer/Integration/Flüchtlinge`),
-    Klima = mean(`Energie/Versorgung/Klima`),
-    Corona = mean(Coronavirus),
-    UkraineKrieg = mean(`Ukraine/Krieg/Russland`)
-    #Total = sum(Corona) + sum(Flüchtlinge) + sum(Klima) + sum(UkraineKrieg)
-  )
-
-#mit totals
-dfGroup2 <- df2013%>%
-  select(`Energie/Versorgung/Klima`,Coronavirus,`Ausländer/Integration/Flüchtlinge`,`Ukraine/Krieg/Russland`,date)%>%
-  group_by(date)%>%
-    mutate(`Energie/Versorgung/Klima`= if_else(is.na(`Energie/Versorgung/Klima`), 0, `Energie/Versorgung/Klima`))%>%
-    mutate(Coronavirus= if_else(is.na(Coronavirus), 0, Coronavirus))%>%
-    mutate(`Ausländer/Integration/Flüchtlinge`= if_else(is.na(`Ausländer/Integration/Flüchtlinge`), 0, `Ausländer/Integration/Flüchtlinge`))%>%
-    mutate(`Ukraine/Krieg/Russland`= if_else(is.na(`Ukraine/Krieg/Russland`), 0, `Ukraine/Krieg/Russland`))%>%
-  reframe(
-    Flüchtlinge = mean(`Ausländer/Integration/Flüchtlinge`),
-    Klima = mean(`Energie/Versorgung/Klima`),
-    Corona = mean(Coronavirus),
-    UkraineKrieg = mean(`Ukraine/Krieg/Russland`),
-    Total = sum(Corona) + sum(Flüchtlinge) + sum(Klima) + sum(UkraineKrieg)
-  )
-
 
 ```
 
-### Seit 2001 in Jahren
-Klima
-Flüchtlinge
 
-```{r}
-
-df$year <- substring(df$...2, 7,11)
-df2001 <- df[df$year >= 2001,]
-
-
-df$dates <- as.Date(df$...2, format = "%d.%m.%Y")
-df$quarter <- floor_date(df$dates, "quarter")
-
-
-dfGroup1 <- df2001%>%
-  select(`Energie/Versorgung/Klima`,Coronavirus,`Ausländer/Integration/Flüchtlinge`,`Ukraine/Krieg/Russland`,year)%>%
-  group_by(year)%>%
-    mutate(`Energie/Versorgung/Klima`= if_else(is.na(`Energie/Versorgung/Klima`), 0, `Energie/Versorgung/Klima`))%>%
-    mutate(Coronavirus= if_else(is.na(Coronavirus), 0, Coronavirus))%>%
-    mutate(`Ausländer/Integration/Flüchtlinge`= if_else(is.na(`Ausländer/Integration/Flüchtlinge`), 0, `Ausländer/Integration/Flüchtlinge`))%>%
-    mutate(`Ukraine/Krieg/Russland`= if_else(is.na(`Ukraine/Krieg/Russland`), 0, `Ukraine/Krieg/Russland`))%>%
-  reframe(
-    Flüchtlinge = mean(`Ausländer/Integration/Flüchtlinge`),
-    Klima = mean(`Energie/Versorgung/Klima`),
-    Corona = mean(Coronavirus),
-    UkraineKrieg = mean(`Ukraine/Krieg/Russland`)
-    #Total = sum(Corona) + sum(Flüchtlinge) + sum(Klima) + sum(UkraineKrieg)
-  )
-```
 ### Quarters
 
 ```{r}

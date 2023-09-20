@@ -7,14 +7,12 @@ date: "2023-08-21"
 ### Corona
 
 ```{r}
-flüchtlinge <- c("(Binnen)", "Flüchtling*", "Geflüchtet*", "globaler Flüchtlingspakt", "Syrien", "Migranten*", "Genfer Flüchtlingskonvention", "Flüchtlingslager", "Asylbewerber*", "Asyl", "Aufenthaltserlaubnis", "Einwanderung*", "Aufenthaltstitel", "Illegal", "Herkunftsstaat*", "Dublin-Verordnung","Dublin-Abkommen")
+#flüchtlinge <- c("(Binnen)", "Flüchtling*", "Geflüchtet*", "globaler Flüchtlingspakt", "Syrien", "Migranten*", "Genfer Flüchtlingskonvention", "Flüchtlingslager", "Asylbewerber*", "Asyl", "Aufenthaltserlaubnis", "Einwanderung*", "Aufenthaltstitel", "Illegal", "Herkunftsstaat*", "Dublin-Verordnung","Dublin-Abkommen")
 
-#"*integration*"
-#refugee <- c("*flüchtling*", "*einwanderung*","*migra*","*asyl*")
-#refugee <- c("*flüchtling*", "*einwanderung*","*migra*","*asyl*","*integration*")
+
 refugee <- c("*flüchtlinge*", "*einwanderung*","migration","asyl","integration")
 
-#asyl eventuell rausnehmen
+
 ```
 
 
@@ -75,6 +73,15 @@ results_refugee <- dfRefugee %>%
     refugee = sum(refugee)
   )
 
+#Month
+dfRefugee$month <- floor_date(docvars(dfm)$date, "month")
+
+results_refugee_m <- dfRefugee %>%
+  select(month, refugee)%>%
+  group_by(month)%>%
+  reframe(
+    refugee = sum(refugee)
+  )
 ```
 
 
